@@ -145,12 +145,12 @@
 
     <script>
       const cardsData = [
-        { id: 1, name: "Modern Floral", url: "./images/bg1.jpg" },
-        { id: 2, name: "Elegant Minimal", url: "./images/bg2.jpg" },
-        { id: 3, name: "Watercolor Abstract", url: "./images/bg3.jpg" },
-        { id: 4, name: "Simple Typography", url: "./images/bg4.jpg" },
-        { id: 5, name: "Geometric Pattern", url: "./images/bg5.jpg" },
-        { id: 6, name: "Bright Celebration", url: "./images/bg6.jpg" },
+        { id: 1, name: "Modern Floral", url: "/images/bg1.jpg" },
+        { id: 2, name: "Elegant Minimal", url: "/images/bg2.jpg" },
+        { id: 3, name: "Watercolor Abstract", url: "/images/bg3.jpg" },
+        { id: 4, name: "Simple Typography", url: "/images/bg4.jpg" },
+        { id: 5, name: "Geometric Pattern", url: "/images/bg5.jpg" },
+        { id: 6, name: "Bright Celebration", url: "/images/bg6.jpg" },
       ];
 
       // START: Preselect the first card (ID 1) so the canvas is not empty.
@@ -182,6 +182,16 @@
       function selectCard(id) {
         selectedCardId = id;
         renderCards(); // Re-render to update the 'selected' class
+        loadedImage = p.loadImage(
+          cardsData[cardsData.indexOf((x) => x.id === id)].url ??
+            "/images/bg1.jpg",
+          () => {
+            console.log("Template image loaded successfully.");
+          },
+          () => {
+            console.error("Failed to load template image.");
+          }
+        );
         if (p5Instance) {
           p5Instance.redraw();
         }
