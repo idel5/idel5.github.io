@@ -4,18 +4,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Demo Design Selector</title>
-    <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Load p5.js Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
     <style>
-      /* Custom styles for better visual appeal */
       body {
         font-family: "Inter", sans-serif;
         background-color: #f3f4f6; /* Light gray background */
       }
       .card-grid-container {
-        max-height: calc(100vh - 4rem); /* Adjust based on header/footer */
+        max-height: calc(100vh - 4rem);
         overflow-y: auto;
       }
       .card {
@@ -28,7 +25,7 @@
         box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
       }
       .card.selected {
-        border: 4px solid #4f46e5; /* Indigo ring for selection */
+        border: 4px solid #4f46e5;
         box-shadow: 0 0 0 4px #818cf8;
       }
       /* Custom thumb color for the size slider */
@@ -144,7 +141,10 @@
     </div>
 
     <script>
+      // --- 1. DATA AND STATE MANAGEMENT ---
+
       const cardsData = [
+        // Assuming /images/bgX.jpg are your custom image paths
         { id: 1, name: "Modern Floral", url: "/images/bg1.jpg" },
         { id: 2, name: "Elegant Minimal", url: "/images/bg2.jpg" },
         { id: 3, name: "Watercolor Abstract", url: "/images/bg3.jpg" },
@@ -153,7 +153,8 @@
         { id: 6, name: "Bright Celebration", url: "/images/bg6.jpg" },
       ];
 
-      // START: Preselect the first card (ID 1) so the canvas is not empty.
+      // Declare loadedImage at the top level so all functions can access and update it.
+      let loadedImage = null;
       let selectedCardId = 1;
       let p5Instance = null;
 
@@ -177,23 +178,31 @@
 
       /**
        * Updates the selected card ID and re-renders the grid for selection styling.
+       * Loads the new image and forces a p5.js redraw.
        * @param {number} id The ID of the card selected.
        */
       function selectCard(id) {
         selectedCardId = id;
         renderCards(); // Re-render to update the 'selected' class
-        loadedImage = p.loadImage(
-          cardsData[cardsData.indexOf((x) => x.id === id)].url ??
-            "/images/bg1.jpg",
-          () => {
-            console.log("Template image loaded successfully.");
-          },
-          () => {
-            console.error("Failed to load template image.");
-          }
-        );
+
+        // --- FIX: Correctly find the image URL using .find() ---
+        const selected = cardsData.find((card) => card.id === id);
+        const imageUrl = selected ? selected.url : "/images/bg1.jpg";
+
         if (p5Instance) {
-          p5Instance.redraw();
+          // loadImage is a method of the p5Instance (p).
+          // We set the global loadedImage variable to the result of the load.
+          loadedImage = p5Instance.loadImage(
+            imageUrl,
+            () => {
+              console.log("Template image loaded successfully: " + imageUrl);
+              // Force redraw only after the image is fully loaded
+              p5Instance.redraw();
+            },
+            () => {
+              console.error("Failed to load template image: " + imageUrl);
+            }
+          );
         }
       }
 
@@ -214,8 +223,6 @@
           } transition`;
           cardElement.onclick = () => selectCard(card.id);
 
-          // Placeholder visual now uses the actual image template URL
-          // The image collection shows a grid of templates, which works well as a preview.
           let visualHtml = `
                     <img 
                         src="${card.url}" 
@@ -262,19 +269,19 @@
       const sketch = (p) => {
         let canvas;
         let containerWidth, containerHeight;
-        let loadedImage; // Variable to hold the loaded image
         let textBounds = {}; // Stores the bounding box of the text for hit testing
 
-        // p5.js preload function to load the image before setup/draw
+        // p5.js preload function to load the initial image
         p.preload = () => {
-          // Load the image collection URL once
+          const initialCard = cardsData.find((c) => c.id === selectedCardId);
+          // Set the global loadedImage variable here
           loadedImage = p.loadImage(
-            "/images/bg1.jpg",
+            initialCard ? initialCard.url : "/images/bg1.jpg",
             () => {
-              console.log("Template image loaded successfully.");
+              console.log("Initial template image loaded successfully.");
             },
             () => {
-              console.error("Failed to load template image.");
+              console.error("Failed to load initial template image.");
             }
           );
         };
@@ -351,6 +358,7 @@
           p.noStroke();
 
           // 2. Draw the loaded image template
+          // This uses the global loadedImage variable
           if (selectedCardId !== null && loadedImage && loadedImage.width > 0) {
             // Calculate image size to fit within the canvas while maintaining aspect ratio (contain)
             let imgRatio = loadedImage.width / loadedImage.height;
