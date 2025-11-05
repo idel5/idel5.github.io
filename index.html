@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>P5.js Card Imposer</title>
+    <title>Demo Design Selector</title>
     <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Load p5.js Library -->
@@ -61,7 +61,9 @@
       <div
         class="lg:w-1/3 card-grid-container p-4 bg-white rounded-xl shadow-lg"
       >
-        <h2 class="text-xl font-semibold mb-4 text-gray-700">Image Library</h2>
+        <h2 class="text-xl font-semibold mb-4 text-gray-700">
+          Template Library
+        </h2>
         <div id="card-grid" class="grid grid-cols-2 gap-4">
           <!-- Cards will be injected here by JavaScript -->
         </div>
@@ -77,11 +79,11 @@
           <!-- P5.js canvas will be inserted here -->
         </div>
         <p class="text-sm text-gray-500 mt-3 text-center mb-4">
-          Click a card on the left to impose its design onto this canvas. **Drag
-          the text** directly on the canvas to reposition it!
+          Click a template on the left to load it onto this canvas. **Drag the
+          text** directly on the canvas to reposition it!
         </p>
 
-        <!-- New Text Controls Panel -->
+        <!-- Text Controls Panel -->
         <div class="p-4 border-t border-gray-200 mt-4">
           <h3 class="text-lg font-semibold mb-3 text-gray-700">
             Customize Text Overlay
@@ -142,57 +144,18 @@
     </div>
 
     <script>
-      // --- 1. DATA AND STATE MANAGEMENT ---
-
-      // Define the "images" as objects containing design properties
       const cardsData = [
-        {
-          id: 1,
-          name: "Abstract Sun",
-          fill: "#F59E0B",
-          shape: "circle",
-          stroke: "#92400E",
-        },
-        {
-          id: 2,
-          name: "Woven Pattern",
-          fill: "#10B981",
-          shape: "rect",
-          stroke: "#065F46",
-        },
-        {
-          id: 3,
-          name: "Neon Triangles",
-          fill: "#8B5CF6",
-          shape: "triangle",
-          stroke: "#5B21B6",
-        },
-        {
-          id: 4,
-          name: "Aura",
-          fill: "#EF4444",
-          shape: "ellipse",
-          stroke: "#B91C1C",
-        },
-        {
-          id: 5,
-          name: "Blue Grid",
-          fill: "#3B82F6",
-          shape: "grid",
-          stroke: "#1D4ED8",
-        },
-        {
-          id: 6,
-          name: "Simple Black",
-          fill: "#374151",
-          shape: "square",
-          stroke: "#1F2937",
-        },
+        { id: 1, name: "Modern Floral", url: "./images/bg1.jpg" },
+        { id: 2, name: "Elegant Minimal", url: "./images/bg2.jpg" },
+        { id: 3, name: "Watercolor Abstract", url: "./images/bg3.jpg" },
+        { id: 4, name: "Simple Typography", url: "./images/bg4.jpg" },
+        { id: 5, name: "Geometric Pattern", url: "./images/bg5.jpg" },
+        { id: 6, name: "Bright Celebration", url: "./images/bg6.jpg" },
       ];
 
-      let selectedCardId = null;
+      // START: Preselect the first card (ID 1) so the canvas is not empty.
+      let selectedCardId = 1;
       let p5Instance = null;
-      let cardSize = 100; // Standard size for the object on canvas
 
       // New state for text and dragging
       let textState = {
@@ -220,7 +183,6 @@
         selectedCardId = id;
         renderCards(); // Re-render to update the 'selected' class
         if (p5Instance) {
-          // Force p5.js to redraw immediately with the new selection
           p5Instance.redraw();
         }
       }
@@ -235,26 +197,23 @@
           const isSelected = card.id === selectedCardId;
           const cardElement = document.createElement("div");
           cardElement.id = `card-${card.id}`;
-          // Use selected class for visual feedback
           cardElement.className = `card relative p-4 rounded-lg flex flex-col items-center justify-center text-center ${
             isSelected
               ? "selected ring-4 ring-indigo-500"
-              : "bg-gray-50 hover:bg-gray-100"
+              : "bg-white hover:bg-gray-100"
           } transition`;
           cardElement.onclick = () => selectCard(card.id);
 
-          // Placeholder image/visual representation
-          let visualHtml = "";
-          if (card.shape === "circle" || card.shape === "ellipse") {
-            visualHtml = `<div class="w-16 h-16 rounded-full" style="background-color: ${card.fill}; border: 2px solid ${card.stroke};"></div>`;
-          } else if (card.shape === "rect" || card.shape === "square") {
-            visualHtml = `<div class="w-16 h-16 rounded-md" style="background-color: ${card.fill}; border: 2px solid ${card.stroke};"></div>`;
-          } else if (card.shape === "triangle") {
-            // CSS triangle trick
-            visualHtml = `<div class="w-0 h-0 border-l-[32px] border-l-transparent border-r-[32px] border-r-transparent border-b-[64px]" style="border-bottom-color: ${card.fill};"></div>`;
-          } else {
-            visualHtml = `<div class="w-16 h-4 bg-gray-400"></div>`; // Fallback for 'line' or 'grid'
-          }
+          // Placeholder visual now uses the actual image template URL
+          // The image collection shows a grid of templates, which works well as a preview.
+          let visualHtml = `
+                    <img 
+                        src="${card.url}" 
+                        alt="${card.name} template" 
+                        class="w-16 h-16 object-cover rounded-md shadow-inner" 
+                        onerror="this.onerror=null; this.src='https://placehold.co/64x64/E0E0E0/333333?text=Template'"
+                    >
+                `;
 
           cardElement.innerHTML = `
                     <div class="mb-2 p-2">${visualHtml}</div>
@@ -293,7 +252,22 @@
       const sketch = (p) => {
         let canvas;
         let containerWidth, containerHeight;
+        let loadedImage; // Variable to hold the loaded image
         let textBounds = {}; // Stores the bounding box of the text for hit testing
+
+        // p5.js preload function to load the image before setup/draw
+        p.preload = () => {
+          // Load the image collection URL once
+          loadedImage = p.loadImage(
+            "/images/bg1.jpg",
+            () => {
+              console.log("Template image loaded successfully.");
+            },
+            () => {
+              console.error("Failed to load template image.");
+            }
+          );
+        };
 
         p.setup = () => {
           // Get the size of the container dynamically
@@ -308,9 +282,8 @@
           textState.x = p.width / 2;
           textState.y = p.height / 2;
 
-          // Set initial drawing properties
           p.angleMode(p.DEGREES);
-          p.noLoop(); // Only redraw when selectCard is called (or p.redraw())
+          p.noLoop(); // Only redraw on events
         };
 
         p.windowResized = () => {
@@ -365,90 +338,38 @@
         p.draw = () => {
           // 1. Background: Clear the canvas with a light shade
           p.background(240);
+          p.noStroke();
 
-          // 2. Draw the selected design element
-          if (selectedCardId !== null) {
-            const selected = cardsData.find((c) => c.id === selectedCardId);
-            if (selected) {
-              const cx = p.width / 2;
-              const cy = p.height / 2;
+          // 2. Draw the loaded image template
+          if (selectedCardId !== null && loadedImage && loadedImage.width > 0) {
+            // Calculate image size to fit within the canvas while maintaining aspect ratio (contain)
+            let imgRatio = loadedImage.width / loadedImage.height;
+            let canvasRatio = p.width / p.height;
+            let drawWidth, drawHeight;
+            let x, y;
 
-              // Apply the design properties
-              p.fill(selected.fill);
-              p.stroke(selected.stroke);
-              p.strokeWeight(4);
-
-              // Draw the corresponding shape/design (same logic as before)
-              switch (selected.shape) {
-                case "circle":
-                  p.ellipse(cx, cy, cardSize * 1.5, cardSize * 1.5);
-                  break;
-                case "rect":
-                  p.rectMode(p.CENTER);
-                  p.rect(cx, cy, cardSize * 2, cardSize);
-                  break;
-                case "triangle":
-                  let side = cardSize * 2;
-                  let h = (p.sqrt(3) / 2) * side;
-                  p.triangle(
-                    cx,
-                    cy - h / 2,
-                    cx - side / 2,
-                    cy + h / 2,
-                    cx + side / 2,
-                    cy + h / 2
-                  );
-                  break;
-                case "ellipse":
-                  p.ellipse(cx, cy, cardSize * 2.5, cardSize * 1);
-                  break;
-                case "square":
-                  p.rectMode(p.CENTER);
-                  p.square(cx, cy, cardSize * 1.8);
-                  break;
-                case "grid":
-                  p.noFill();
-                  p.strokeWeight(1);
-                  p.stroke(selected.stroke);
-                  let gridSize = 20;
-                  let size = cardSize * 2.5;
-
-                  for (
-                    let x = cx - size / 2;
-                    x <= cx + size / 2;
-                    x += gridSize
-                  ) {
-                    p.line(x, cy - size / 2, x, cy + size / 2);
-                  }
-                  for (
-                    let y = cy - size / 2;
-                    y <= cy + size / 2;
-                    y += gridSize
-                  ) {
-                    p.line(cx - size / 2, y, cx + size / 2, y);
-                  }
-                  p.strokeWeight(4);
-                  p.stroke(selected.fill);
-                  p.rectMode(p.CENTER);
-                  p.rect(cx, cy, size, size); // Outer frame
-                  break;
-                default:
-                  break;
-              }
+            if (canvasRatio > imgRatio) {
+              // Canvas is wider than image, fit by height
+              drawHeight = p.height;
+              drawWidth = drawHeight * imgRatio;
+            } else {
+              // Canvas is taller than image, fit by width
+              drawWidth = p.width;
+              drawHeight = drawWidth / imgRatio;
             }
-          } else {
-            // Instruction text when no card is selected
-            p.fill(150);
-            p.textSize(24);
-            p.textAlign(p.CENTER, p.CENTER);
-            p.text("Select an image from the left!", p.width / 2, p.height / 2);
+
+            // Center the image
+            x = (p.width - drawWidth) / 2;
+            y = (p.height - drawHeight) / 2;
+
+            p.image(loadedImage, x, y, drawWidth, drawHeight);
           }
 
           // 3. Draw the custom text overlay
           if (textState.content.length > 0) {
             p.fill(0); // Black text color
             p.textSize(textState.size);
-            p.textAlign(p.CENTER, p.TOP); // Align text centered, top baseline for easier drag math
+            p.textAlign(p.CENTER, p.TOP);
 
             // Set font based on selected family name
             p.textFont(textState.font);
@@ -461,7 +382,7 @@
             textBounds.x = textState.x;
             textBounds.y = textState.y;
 
-            // Change cursor style when hovering over the text for better UX
+            // Text focus on hover: Change cursor style
             if (isMouseOverText() || textState.isDragging) {
               p.cursor(p.MOVE);
             } else {
@@ -475,7 +396,6 @@
 
       // Initialize the p5.js sketch when the window loads
       window.onload = () => {
-        // Remove explicit height setting, let the flex container manage it
         p5Instance = new p5(sketch);
       };
     </script>
