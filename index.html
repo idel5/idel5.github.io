@@ -85,7 +85,7 @@
           <h3 class="text-lg font-semibold mb-3 text-gray-700">
             Customize Text Overlay
           </h3>
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+          <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
             <!-- Text Input -->
             <div class="col-span-2">
               <label
@@ -117,6 +117,20 @@
                 <option value="monospace">Monospace (Courier)</option>
                 <option value="cursive">Cursive</option>
               </select>
+            </div>
+
+            <div>
+              <label
+                for="color-input"
+                class="block text-sm font-medium text-gray-700"
+                >Text Color</label
+              >
+              <input
+                type="color"
+                id="color-input"
+                value="#000000"
+                class="mt-1 block w-full h-10 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-1 cursor-pointer"
+              />
             </div>
 
             <!-- Size Slider -->
@@ -153,7 +167,6 @@
         { id: 6, name: "Bright Celebration", url: "/images/bg6.jpg" },
       ];
 
-      // Declare loadedImage at the top level so all functions can access and update it.
       let loadedImage = null;
       let selectedCardId = 1;
       let p5Instance = null;
@@ -163,6 +176,7 @@
         content: "Your Custom Text",
         font: "sans-serif",
         size: 48,
+        color: "#000000",
         x: 0,
         y: 0,
         isDragging: false,
@@ -185,7 +199,6 @@
         selectedCardId = id;
         renderCards(); // Re-render to update the 'selected' class
 
-        // --- FIX: Correctly find the image URL using .find() ---
         const selected = cardsData.find((card) => card.id === id);
         const imageUrl = selected ? selected.url : "/images/bg1.jpg";
 
@@ -224,10 +237,10 @@
           cardElement.onclick = () => selectCard(card.id);
 
           let visualHtml = `
-                    <img 
-                        src="${card.url}" 
-                        alt="${card.name} template" 
-                        class="w-16 h-16 object-cover rounded-md shadow-inner" 
+                    <img
+                        src="${card.url}"
+                        alt="${card.name} template"
+                        class="w-16 h-16 object-cover rounded-md shadow-inner"
                         onerror="this.onerror=null; this.src='https://placehold.co/64x64/E0E0E0/333333?text=Template'"
                     >
                 `;
@@ -244,17 +257,25 @@
       // Initial render of cards
       renderCards();
 
-      // New variables and event listeners for text controls
+      // Event listener for Text Content
       document.getElementById("text-input").addEventListener("input", (e) => {
         textState.content = e.target.value;
         if (p5Instance) p5Instance.redraw();
       });
 
+      // Event listener for Font Selector
       document.getElementById("font-select").addEventListener("change", (e) => {
         textState.font = e.target.value;
         if (p5Instance) p5Instance.redraw();
       });
 
+      // New: Event listener for Color Input
+      document.getElementById("color-input").addEventListener("input", (e) => {
+        textState.color = e.target.value;
+        if (p5Instance) p5Instance.redraw();
+      });
+
+      // Event listener for Size Slider
       const fontSizeInput = document.getElementById("font-size");
       const sizeValueSpan = document.getElementById("size-value");
 
@@ -385,7 +406,7 @@
 
           // 3. Draw the custom text overlay
           if (textState.content.length > 0) {
-            p.fill(0); // Black text color
+            p.fill(textState.color); // Use the selected color for the text
             p.textSize(textState.size);
             p.textAlign(p.CENTER, p.TOP);
 
