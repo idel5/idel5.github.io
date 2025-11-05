@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>P5.js Card Imposer</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load p5.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <style>
+      /* Custom styles for better visual appeal */
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #f3f4f6; /* Light gray background */
+      }
+      .card-grid-container {
+        max-height: calc(100vh - 4rem); /* Adjust based on header/footer */
+        overflow-y: auto;
+      }
+      .card {
+        transition: all 0.2s ease-in-out;
+        cursor: pointer;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+      .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+      }
+      .card.selected {
+        border: 4px solid #4f46e5; /* Indigo ring for selection */
+        box-shadow: 0 0 0 4px #818cf8;
+      }
+      /* Custom thumb color for the size slider */
+      .slider-thumb-indigo::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #4f46e5;
+        cursor: pointer;
+      }
+      .slider-thumb-indigo::-moz-range-thumb {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #4f46e5;
+        cursor: pointer;
+        border: none;
+      }
+    </style>
+  </head>
+  <body class="p-4 md:p-8">
+    <h1 class="text-3xl font-extrabold text-gray-800 mb-6 border-b-2 pb-2">
+      Demo Design Selector
+    </h1>
+
+    <div id="app-container" class="flex flex-col lg:flex-row gap-8">
+      <!-- 1. Card Selection Grid (Left Side) -->
+      <div
+        class="lg:w-1/3 card-grid-container p-4 bg-white rounded-xl shadow-lg"
+      >
+        <h2 class="text-xl font-semibold mb-4 text-gray-700">Image Library</h2>
+        <div id="card-grid" class="grid grid-cols-2 gap-4">
+          <!-- Cards will be injected here by JavaScript -->
+        </div>
+      </div>
+
+      <!-- 2. P5.js Design Area (Right Side) -->
+      <div class="lg:w-2/3 p-4 bg-white rounded-xl shadow-lg flex flex-col">
+        <h2 class="text-xl font-semibold mb-4 text-gray-700">Design Canvas</h2>
+        <div
+          id="p5-canvas-container"
+          class="flex-grow flex items-center justify-center bg-gray-100 border border-gray-300 rounded-lg min-h-[400px]"
+        >
+          <!-- P5.js canvas will be inserted here -->
+        </div>
+        <p class="text-sm text-gray-500 mt-3 text-center mb-4">
+          Click a card on the left to impose its design onto this canvas. **Drag
+          the text** directly on the canvas to reposition it!
+        </p>
+
+        <!-- New Text Controls Panel -->
+        <div class="p-4 border-t border-gray-200 mt-4">
+          <h3 class="text-lg font-semibold mb-3 text-gray-700">
+            Customize Text Overlay
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            <!-- Text Input -->
+            <div class="col-span-2">
+              <label
+                for="text-input"
+                class="block text-sm font-medium text-gray-700"
+                >Text Content</label
+              >
+              <input
+                type="text"
+                id="text-input"
+                value="Your Custom Text"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border"
+              />
+            </div>
+
+            <!-- Font Selector -->
+            <div>
+              <label
+                for="font-select"
+                class="block text-sm font-medium text-gray-700"
+                >Font Family</label
+              >
+              <select
+                id="font-select"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border bg-white"
+              >
+                <option value="sans-serif">Sans-serif (Inter/Arial)</option>
+                <option value="serif">Serif (Times New Roman)</option>
+                <option value="monospace">Monospace (Courier)</option>
+                <option value="cursive">Cursive</option>
+              </select>
+            </div>
+
+            <!-- Size Slider -->
+            <div>
+              <label
+                for="font-size"
+                class="block text-sm font-medium text-gray-700"
+                >Size (<span id="size-value">48</span>px)</label
+              >
+              <input
+                type="range"
+                id="font-size"
+                min="16"
+                max="120"
+                value="48"
+                class="mt-1 w-full appearance-none bg-gray-200 rounded-lg h-2 slider-thumb-indigo"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // --- 1. DATA AND STATE MANAGEMENT ---
+
+      // Define the "images" as objects containing design properties
+      const cardsData = [
+        {
+          id: 1,
+          name: "Abstract Sun",
+          fill: "#F59E0B",
+          shape: "circle",
+          stroke: "#92400E",
+        },
+        {
+          id: 2,
+          name: "Woven Pattern",
+          fill: "#10B981",
+          shape: "rect",
+          stroke: "#065F46",
+        },
+        {
+          id: 3,
+          name: "Neon Triangles",
+          fill: "#8B5CF6",
+          shape: "triangle",
+          stroke: "#5B21B6",
+        },
+        {
+          id: 4,
+          name: "Aura",
+          fill: "#EF4444",
+          shape: "ellipse",
+          stroke: "#B91C1C",
+        },
+        {
+          id: 5,
+          name: "Blue Grid",
+          fill: "#3B82F6",
+          shape: "grid",
+          stroke: "#1D4ED8",
+        },
+        {
+          id: 6,
+          name: "Simple Black",
+          fill: "#374151",
+          shape: "square",
+          stroke: "#1F2937",
+        },
+      ];
+
+      let selectedCardId = null;
+      let p5Instance = null;
+      let cardSize = 100; // Standard size for the object on canvas
+
+      // New state for text and dragging
+      let textState = {
+        content: "Your Custom Text",
+        font: "sans-serif",
+        size: 48,
+        x: 0,
+        y: 0,
+        isDragging: false,
+        // Offsets used to maintain drag position relative to mouse click point
+        offsetX: 0,
+        offsetY: 0,
+      };
+
+      // --- 2. DOM RENDERING AND INTERACTION ---
+
+      const cardGrid = document.getElementById("card-grid");
+      const p5CanvasContainer = document.getElementById("p5-canvas-container");
+
+      /**
+       * Updates the selected card ID and re-renders the grid for selection styling.
+       * @param {number} id The ID of the card selected.
+       */
+      function selectCard(id) {
+        selectedCardId = id;
+        renderCards(); // Re-render to update the 'selected' class
+        if (p5Instance) {
+          // Force p5.js to redraw immediately with the new selection
+          p5Instance.redraw();
+        }
+      }
+
+      /**
+       * Renders the cards from cardsData into the grid container.
+       */
+      function renderCards() {
+        cardGrid.innerHTML = ""; // Clear previous cards
+
+        cardsData.forEach((card) => {
+          const isSelected = card.id === selectedCardId;
+          const cardElement = document.createElement("div");
+          cardElement.id = `card-${card.id}`;
+          // Use selected class for visual feedback
+          cardElement.className = `card relative p-4 rounded-lg flex flex-col items-center justify-center text-center ${
+            isSelected
+              ? "selected ring-4 ring-indigo-500"
+              : "bg-gray-50 hover:bg-gray-100"
+          } transition`;
+          cardElement.onclick = () => selectCard(card.id);
+
+          // Placeholder image/visual representation
+          let visualHtml = "";
+          if (card.shape === "circle" || card.shape === "ellipse") {
+            visualHtml = `<div class="w-16 h-16 rounded-full" style="background-color: ${card.fill}; border: 2px solid ${card.stroke};"></div>`;
+          } else if (card.shape === "rect" || card.shape === "square") {
+            visualHtml = `<div class="w-16 h-16 rounded-md" style="background-color: ${card.fill}; border: 2px solid ${card.stroke};"></div>`;
+          } else if (card.shape === "triangle") {
+            // CSS triangle trick
+            visualHtml = `<div class="w-0 h-0 border-l-[32px] border-l-transparent border-r-[32px] border-r-transparent border-b-[64px]" style="border-bottom-color: ${card.fill};"></div>`;
+          } else {
+            visualHtml = `<div class="w-16 h-4 bg-gray-400"></div>`; // Fallback for 'line' or 'grid'
+          }
+
+          cardElement.innerHTML = `
+                    <div class="mb-2 p-2">${visualHtml}</div>
+                    <span class="text-sm font-medium text-gray-800">${card.name}</span>
+                `;
+
+          cardGrid.appendChild(cardElement);
+        });
+      }
+
+      // Initial render of cards
+      renderCards();
+
+      // New variables and event listeners for text controls
+      document.getElementById("text-input").addEventListener("input", (e) => {
+        textState.content = e.target.value;
+        if (p5Instance) p5Instance.redraw();
+      });
+
+      document.getElementById("font-select").addEventListener("change", (e) => {
+        textState.font = e.target.value;
+        if (p5Instance) p5Instance.redraw();
+      });
+
+      const fontSizeInput = document.getElementById("font-size");
+      const sizeValueSpan = document.getElementById("size-value");
+
+      fontSizeInput.addEventListener("input", (e) => {
+        textState.size = parseInt(e.target.value, 10);
+        sizeValueSpan.textContent = textState.size;
+        if (p5Instance) p5Instance.redraw();
+      });
+
+      // --- 3. P5.JS SKETCH ---
+
+      const sketch = (p) => {
+        let canvas;
+        let containerWidth, containerHeight;
+        let textBounds = {}; // Stores the bounding box of the text for hit testing
+
+        p.setup = () => {
+          // Get the size of the container dynamically
+          containerWidth = p5CanvasContainer.offsetWidth;
+          containerHeight = p5CanvasContainer.offsetHeight;
+
+          // Create a canvas that fills the container
+          canvas = p.createCanvas(containerWidth, containerHeight);
+          canvas.parent("p5-canvas-container");
+
+          // Initialize text position to center of canvas
+          textState.x = p.width / 2;
+          textState.y = p.height / 2;
+
+          // Set initial drawing properties
+          p.angleMode(p.DEGREES);
+          p.noLoop(); // Only redraw when selectCard is called (or p.redraw())
+        };
+
+        p.windowResized = () => {
+          // Re-calculate container size and resize canvas on window resize
+          containerWidth = p5CanvasContainer.offsetWidth;
+          containerHeight = p5CanvasContainer.offsetHeight;
+          p.resizeCanvas(containerWidth, containerHeight);
+
+          // Re-center text position if it was outside bounds
+          textState.x = p.constrain(textState.x, 0, p.width);
+          textState.y = p.constrain(textState.y, 0, p.height);
+
+          p.redraw(); // Redraw content after resize
+        };
+
+        // Helper function to check if mouse is over the text
+        const isMouseOverText = () => {
+          // Approximate bounding box check based on text position, size, and width
+          return (
+            p.mouseX > textBounds.x - textBounds.width / 2 &&
+            p.mouseX < textBounds.x + textBounds.width / 2 &&
+            p.mouseY > textBounds.y - textState.size && // Roughly top edge
+            p.mouseY < textBounds.y + textState.size / 2
+          ); // Roughly bottom edge
+        };
+
+        p.mousePressed = () => {
+          if (isMouseOverText()) {
+            textState.isDragging = true;
+            // Calculate offset to prevent the text from snapping to the mouse center
+            textState.offsetX = p.mouseX - textState.x;
+            textState.offsetY = p.mouseY - textState.y;
+            p.redraw();
+            return false; // Prevent default behavior
+          }
+        };
+
+        p.mouseDragged = () => {
+          if (textState.isDragging) {
+            // Update text position based on mouse position and original offset
+            textState.x = p.mouseX - textState.offsetX;
+            textState.y = p.mouseY - textState.offsetY;
+            p.redraw();
+          }
+        };
+
+        p.mouseReleased = () => {
+          textState.isDragging = false;
+          p.redraw();
+        };
+
+        p.draw = () => {
+          // 1. Background: Clear the canvas with a light shade
+          p.background(240);
+
+          // 2. Draw the selected design element
+          if (selectedCardId !== null) {
+            const selected = cardsData.find((c) => c.id === selectedCardId);
+            if (selected) {
+              const cx = p.width / 2;
+              const cy = p.height / 2;
+
+              // Apply the design properties
+              p.fill(selected.fill);
+              p.stroke(selected.stroke);
+              p.strokeWeight(4);
+
+              // Draw the corresponding shape/design (same logic as before)
+              switch (selected.shape) {
+                case "circle":
+                  p.ellipse(cx, cy, cardSize * 1.5, cardSize * 1.5);
+                  break;
+                case "rect":
+                  p.rectMode(p.CENTER);
+                  p.rect(cx, cy, cardSize * 2, cardSize);
+                  break;
+                case "triangle":
+                  let side = cardSize * 2;
+                  let h = (p.sqrt(3) / 2) * side;
+                  p.triangle(
+                    cx,
+                    cy - h / 2,
+                    cx - side / 2,
+                    cy + h / 2,
+                    cx + side / 2,
+                    cy + h / 2
+                  );
+                  break;
+                case "ellipse":
+                  p.ellipse(cx, cy, cardSize * 2.5, cardSize * 1);
+                  break;
+                case "square":
+                  p.rectMode(p.CENTER);
+                  p.square(cx, cy, cardSize * 1.8);
+                  break;
+                case "grid":
+                  p.noFill();
+                  p.strokeWeight(1);
+                  p.stroke(selected.stroke);
+                  let gridSize = 20;
+                  let size = cardSize * 2.5;
+
+                  for (
+                    let x = cx - size / 2;
+                    x <= cx + size / 2;
+                    x += gridSize
+                  ) {
+                    p.line(x, cy - size / 2, x, cy + size / 2);
+                  }
+                  for (
+                    let y = cy - size / 2;
+                    y <= cy + size / 2;
+                    y += gridSize
+                  ) {
+                    p.line(cx - size / 2, y, cx + size / 2, y);
+                  }
+                  p.strokeWeight(4);
+                  p.stroke(selected.fill);
+                  p.rectMode(p.CENTER);
+                  p.rect(cx, cy, size, size); // Outer frame
+                  break;
+                default:
+                  break;
+              }
+            }
+          } else {
+            // Instruction text when no card is selected
+            p.fill(150);
+            p.textSize(24);
+            p.textAlign(p.CENTER, p.CENTER);
+            p.text("Select an image from the left!", p.width / 2, p.height / 2);
+          }
+
+          // 3. Draw the custom text overlay
+          if (textState.content.length > 0) {
+            p.fill(0); // Black text color
+            p.textSize(textState.size);
+            p.textAlign(p.CENTER, p.TOP); // Align text centered, top baseline for easier drag math
+
+            // Set font based on selected family name
+            p.textFont(textState.font);
+
+            // Draw the text
+            p.text(textState.content, textState.x, textState.y);
+
+            // Calculate and store text bounds for dragging (using center alignment)
+            textBounds.width = p.textWidth(textState.content);
+            textBounds.x = textState.x;
+            textBounds.y = textState.y;
+
+            // Change cursor style when hovering over the text for better UX
+            if (isMouseOverText() || textState.isDragging) {
+              p.cursor(p.MOVE);
+            } else {
+              p.cursor(p.ARROW);
+            }
+          } else if (!textState.isDragging) {
+            p.cursor(p.ARROW);
+          }
+        };
+      };
+
+      // Initialize the p5.js sketch when the window loads
+      window.onload = () => {
+        // Remove explicit height setting, let the flex container manage it
+        p5Instance = new p5(sketch);
+      };
+    </script>
+  </body>
+</html>
