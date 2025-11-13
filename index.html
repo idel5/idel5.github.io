@@ -53,7 +53,7 @@
   </head>
   <body class="p-4 md:p-8">
     <h1 class="text-3xl font-extrabold text-gray-800 mb-6 border-b-2 pb-2">
-      Demo Design Selector
+      Demo Design Selector (Multi-Image Support)
     </h1>
 
     <div id="app-container" class="flex flex-col lg:flex-row gap-8">
@@ -79,12 +79,23 @@
           <!-- P5.js canvas will be inserted here -->
         </div>
         <p class="text-sm text-gray-500 mt-3 text-center mb-4">
-          Click a template on the left to load it onto this canvas. **Drag the
-          text or uploaded image** directly on the canvas to reposition it!
+          Click a template on the left to load it onto this canvas. **Click and Drag** elements directly on the canvas to reposition them!
         </p>
 
         <!-- Main Controls Container -->
         <div class="border-t border-gray-200 mt-4 pt-4 space-y-6">
+
+          <!-- NEW: Active Element Status Panel -->
+          <div class="p-4 bg-indigo-50 rounded-lg shadow-inner border border-indigo-200">
+            <h3 class="text-lg font-bold mb-3 text-indigo-700">
+              Active Element Status
+            </h3>
+            <p class="text-sm font-medium text-gray-700">
+              Currently Selected: 
+              <span id="active-element-status" class="font-extrabold text-lg text-indigo-900 ml-2">None</span>
+            </p>
+          </div>
+
 
           <!-- TEXT Controls Panel -->
           <div class="p-4 bg-gray-50 rounded-lg shadow-inner">
@@ -159,7 +170,7 @@
             </div>
           </div>
           
-          <!-- NEW: User Image Controls Panel -->
+          <!-- User Image Controls Panel (Now controls active image) -->
           <div class="p-4 bg-gray-50 rounded-lg shadow-inner">
             <h3 class="text-lg font-semibold mb-3 text-gray-700">
               User Image Upload & Transform
@@ -167,19 +178,19 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
               <!-- Image Upload Input -->
               <div>
-                <label for="image-upload" class="block text-sm font-medium text-gray-700">Upload Image (PNG/JPG)</label>
+                <label for="image-upload" class="block text-sm font-medium text-gray-700">Upload New Image</label>
                 <input type="file" id="image-upload" accept="image/png, image/jpeg, image/jpg" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"/>
               </div>
               
               <!-- Image Scale Slider -->
-              <div>
+              <div id="image-scale-control" class="opacity-50 pointer-events-none transition-opacity">
                   <label for="image-scale" class="block text-sm font-medium text-gray-700">Image Scale (<span id="scale-value">100</span>%)</label>
                   <input type="range" id="image-scale" min="10" max="300" value="100" class="mt-1 w-full appearance-none bg-gray-200 rounded-lg h-2 slider-thumb-indigo">
               </div>
 
               <!-- Reset Image Position Button -->
-              <div>
-                   <button id="reset-image-btn" class="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Reset Image Position</button>
+              <div id="reset-image-control" class="opacity-50 pointer-events-none transition-opacity">
+                   <button id="reset-image-btn" class="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Reset Position</button>
               </div>
             </div>
           </div>
@@ -192,49 +203,86 @@
       // --- 1. DATA AND STATE MANAGEMENT ---
 
       const cardsData = [
-        // Assuming /images/bgX.jpg are your custom image paths
-        { id: 1, name: "Modern Floral", url: "/images/bg1.jpg" },
-        { id: 2, name: "Elegant Minimal", url: "/images/bg2.jpg" },
-        { id: 3, name: "Watercolor Abstract", url: "/images/bg3.jpg" },
-        { id: 4, name: "Simple Typography", url: "/images/bg4.jpg" },
-        { id: 5, name: "Geometric Pattern", url: "/images/bg5.jpg" },
-        { id: 6, name: "Bright Celebration", url: "/images/bg6.jpg" },
+        // Placeholder image paths
+        { id: 1, name: "Modern Floral", url: "https://placehold.co/800x600/b1c4e7/ffffff?text=Modern+Floral" },
+        { id: 2, name: "Elegant Minimal", url: "https://placehold.co/800x600/f0f8ff/333333?text=Elegant+Minimal" },
+        { id: 3, name: "Watercolor Abstract", url: "https://placehold.co/800x600/ffecdb/a0522d?text=Watercolor+Abstract" },
+        { id: 4, name: "Simple Typography", url: "https://placehold.co/800x600/e6e6fa/000000?text=Simple+Typography" },
+        { id: 5, name: "Geometric Pattern", url: "https://placehold.co/800x600/d3f8e2/1e90ff?text=Geometric+Pattern" },
+        { id: 6, name: "Bright Celebration", url: "https://placehold.co/800x600/ffffa5/ff6347?text=Bright+Celebration" },
       ];
 
       let loadedImage = null; // Background template image
-      let userImage = null; // New: User uploaded image
       let selectedCardId = 1;
       let p5Instance = null;
+      
+      // Array to store multiple user-uploaded image objects
+      let userImages = []; 
 
+      // Tracks the currently selected element
+      let activeElement = {
+          type: 'none', // 'text', 'image'
+          index: -1,    // Index in the userImages array, or -1 for text/none
+      };
+      
       // State for custom text overlay
       let textState = {
         content: "Your Custom Text",
         font: "sans-serif",
         size: 48,
         color: "#000000",
-        x: 0,
-        y: 0,
+        x: 0, // Initialized in p.setup
+        y: 0, // Initialized in p.setup
         isDragging: false,
         offsetX: 0,
         offsetY: 0,
-      };
-      
-      // New: State for user uploaded image overlay
-      let userImageState = {
-          x: 50,
-          y: 50,
-          originalWidth: 0, // Store original dimensions after load
-          originalHeight: 0,
-          currentScale: 1.0, // Multiplier for size
-          isDragging: false,
-          offsetX: 0,
-          offsetY: 0,
       };
 
       // --- 2. DOM RENDERING AND INTERACTION ---
 
       const cardGrid = document.getElementById("card-grid");
       const p5CanvasContainer = document.getElementById("p5-canvas-container");
+      const activeElementStatus = document.getElementById("active-element-status");
+      const imageScaleInput = document.getElementById('image-scale');
+      const scaleValueSpan = document.getElementById('scale-value');
+      const imageScaleControl = document.getElementById('image-scale-control');
+      const resetImageControl = document.getElementById('reset-image-control');
+
+      /**
+       * Updates the UI controls based on the currently active element.
+       */
+      function updateUIForSelection() {
+          let statusText = 'None';
+          
+          // 1. Update Status Text
+          if (activeElement.type === 'text') {
+              statusText = 'Text Overlay';
+          } else if (activeElement.type === 'image' && activeElement.index >= 0) {
+              statusText = `Image #${activeElement.index + 1}`;
+          }
+          activeElementStatus.textContent = statusText;
+
+          // 2. Update Image Controls State (Disabled/Enabled)
+          const isImageSelected = activeElement.type === 'image';
+
+          imageScaleControl.classList.toggle('opacity-50', !isImageSelected);
+          imageScaleControl.classList.toggle('pointer-events-none', !isImageSelected);
+          resetImageControl.classList.toggle('opacity-50', !isImageSelected);
+          resetImageControl.classList.toggle('pointer-events-none', !isImageSelected);
+
+          if (isImageSelected) {
+              const img = userImages[activeElement.index];
+              const scalePercent = Math.round(img.currentScale * 100);
+              imageScaleInput.value = scalePercent;
+              scaleValueSpan.textContent = scalePercent;
+          } else {
+              // Reset visual controls when no image is selected
+              imageScaleInput.value = 100;
+              scaleValueSpan.textContent = 100;
+          }
+
+          if (p5Instance) p5Instance.redraw();
+      }
 
       /**
        * Updates the selected card ID and loads the new background image.
@@ -244,7 +292,7 @@
         renderCards();
 
         const selected = cardsData.find(card => card.id === id);
-        const imageUrl = selected ? selected.url : "/images/bg1.jpg";
+        const imageUrl = selected ? selected.url : cardsData[0].url;
 
         if (p5Instance) {
             loadedImage = p5Instance.loadImage(
@@ -253,8 +301,8 @@
                     console.log("Template image loaded successfully: " + imageUrl);
                     p5Instance.redraw();
                 },
-                () => {
-                    console.error("Failed to load template image: " + imageUrl);
+                (err) => {
+                    console.error("Failed to load template image: " + imageUrl, err);
                 }
             );
         }
@@ -265,7 +313,6 @@
        */
       function renderCards() {
         cardGrid.innerHTML = "";
-
         cardsData.forEach((card) => {
           const isSelected = card.id === selectedCardId;
           const cardElement = document.createElement("div");
@@ -297,6 +344,7 @@
 
       // Initial render of cards
       renderCards();
+      updateUIForSelection();
 
       // --- Input Event Listeners ---
       
@@ -325,21 +373,40 @@
         if (p5Instance) p5Instance.redraw();
       });
       
-      // New: Image Upload Handler
+      // Image Upload Handler
       document.getElementById("image-upload").addEventListener("change", (e) => {
           const file = e.target.files[0];
           if (file && p5Instance) {
               const reader = new FileReader();
               reader.onload = (readerEvent) => {
                   const dataURL = readerEvent.target.result;
-                  userImage = p5Instance.loadImage(dataURL,
+                  p5Instance.loadImage(dataURL,
                       (img) => {
                           console.log("User image loaded successfully.");
-                          // Set initial dimensions and reset position
-                          userImageState.originalWidth = img.width;
-                          userImageState.originalHeight = img.height;
-                          userImageState.x = p5Instance.width / 2 - (img.width * userImageState.currentScale) / 2;
-                          userImageState.y = p5Instance.height / 2 - (img.height * userImageState.currentScale) / 2;
+                          
+                          // 1. Create a new image state object
+                          const newImageState = {
+                              p5Img: img,
+                              x: p5Instance.width / 4, // Initial position offset slightly
+                              y: p5Instance.height / 4,
+                              originalWidth: img.width,
+                              originalHeight: img.height,
+                              currentScale: 0.5, // Start smaller so it's manageable
+                              isDragging: false,
+                              offsetX: 0,
+                              offsetY: 0,
+                          };
+
+                          // 2. Add to array
+                          userImages.push(newImageState);
+                          
+                          // 3. Auto-select the new image
+                          activeElement.type = 'image';
+                          activeElement.index = userImages.length - 1;
+                          
+                          // 4. Update UI
+                          updateUIForSelection();
+
                           p5Instance.redraw();
                       },
                       () => {
@@ -351,25 +418,29 @@
           }
       });
 
-      // New: Image Scale Slider
-      const imageScaleInput = document.getElementById('image-scale');
-      const scaleValueSpan = document.getElementById('scale-value');
-      
+      // Image Scale Slider
       imageScaleInput.addEventListener('input', (e) => {
-          userImageState.currentScale = parseInt(e.target.value, 10) / 100;
-          scaleValueSpan.textContent = e.target.value;
-          if (p5Instance) p5Instance.redraw();
+          const scalePercent = parseInt(e.target.value, 10);
+          scaleValueSpan.textContent = scalePercent;
+          
+          if (activeElement.type === 'image' && activeElement.index >= 0) {
+              userImages[activeElement.index].currentScale = scalePercent / 100;
+              if (p5Instance) p5Instance.redraw();
+          }
       });
 
-      // New: Reset Image Position Button
+      // Reset Image Position Button
       document.getElementById('reset-image-btn').addEventListener('click', () => {
-          if (userImage && p5Instance) {
-              // Recalculate position to center the current scaled image
-              const currentWidth = userImageState.originalWidth * userImageState.currentScale;
-              const currentHeight = userImageState.originalHeight * userImageState.currentScale;
-              userImageState.x = p5Instance.width / 2 - currentWidth / 2;
-              userImageState.y = p5Instance.height / 2 - currentHeight / 2;
-              p5Instance.redraw();
+          if (activeElement.type === 'image' && activeElement.index >= 0) {
+              const img = userImages[activeElement.index];
+              if (img.p5Img && p5Instance) {
+                  // Recalculate position to center the current scaled image
+                  const currentWidth = img.originalWidth * img.currentScale;
+                  const currentHeight = img.originalHeight * img.currentScale;
+                  img.x = p5Instance.width / 2 - currentWidth / 2;
+                  img.y = p5Instance.height / 2 - currentHeight / 2;
+                  p5Instance.redraw();
+              }
           }
       });
 
@@ -381,16 +452,13 @@
         let containerWidth, containerHeight;
         let textBounds = {}; 
         
-        // Flag to track which element is currently being dragged
-        let draggingElement = null; // 'text' or 'image'
-
         // p5.js preload function to load the initial image
         p.preload = () => {
           const initialCard = cardsData.find(c => c.id === selectedCardId);
           loadedImage = p.loadImage(
-            initialCard ? initialCard.url : "/images/bg1.jpg",
+            initialCard ? initialCard.url : cardsData[0].url,
             () => { console.log("Initial template image loaded successfully."); },
-            () => { console.error("Failed to load initial template image."); }
+            (err) => { console.error("Failed to load initial template image.", err); }
           );
         };
 
@@ -414,11 +482,13 @@
           containerHeight = p5CanvasContainer.offsetHeight;
           p.resizeCanvas(containerWidth, containerHeight);
 
-          // Constrain element positions
+          // Update position controls after resize (simple approach)
           textState.x = p.constrain(textState.x, 0, p.width);
           textState.y = p.constrain(textState.y, 0, p.height);
-          userImageState.x = p.constrain(userImageState.x, -userImageState.originalWidth * userImageState.currentScale, p.width);
-          userImageState.y = p.constrain(userImageState.y, -userImageState.originalHeight * userImageState.currentScale, p.height);
+
+          userImages.forEach(img => {
+              // A more sophisticated constraint is needed, but for simplicity, just redraw
+          });
 
           p.redraw();
         };
@@ -435,55 +505,85 @@
           );
         };
         
-        // New: Helper function to check if mouse is over the user image
-        const isMouseOverUserImage = () => {
-            if (!userImage) return false;
-            const currentWidth = userImageState.originalWidth * userImageState.currentScale;
-            const currentHeight = userImageState.originalHeight * userImageState.currentScale;
+        // Helper function to check if mouse is over a specific image object
+        const isMouseOverImage = (img) => {
+            if (!img.p5Img || img.originalWidth === 0) return false;
+            const currentWidth = img.originalWidth * img.currentScale;
+            const currentHeight = img.originalHeight * img.currentScale;
             
             return (
-                p.mouseX > userImageState.x &&
-                p.mouseX < userImageState.x + currentWidth &&
-                p.mouseY > userImageState.y &&
-                p.mouseY < userImageState.y + currentHeight
+                p.mouseX > img.x &&
+                p.mouseX < img.x + currentWidth &&
+                p.mouseY > img.y &&
+                p.mouseY < img.y + currentHeight
             );
         }
 
         p.mousePressed = () => {
-            // Priority: Check image first, then text
-            if (isMouseOverUserImage()) {
-                draggingElement = 'image';
-                userImageState.isDragging = true;
-                userImageState.offsetX = p.mouseX - userImageState.x;
-                userImageState.offsetY = p.mouseY - userImageState.y;
-                p.redraw();
-                return false;
-            } else if (isMouseOverText()) {
-                draggingElement = 'text';
+            // 1. Check for image hit (in reverse order to hit the topmost image first)
+            for (let i = userImages.length - 1; i >= 0; i--) {
+                const img = userImages[i];
+                if (isMouseOverImage(img)) {
+                    img.isDragging = true;
+                    img.offsetX = p.mouseX - img.x;
+                    img.offsetY = p.mouseY - img.y;
+                    
+                    // Select the image
+                    activeElement.type = 'image';
+                    activeElement.index = i;
+                    updateUIForSelection();
+                    p.redraw();
+                    return false; // Prevent background click logic
+                }
+            }
+
+            // 2. Check for text hit
+            if (isMouseOverText()) {
                 textState.isDragging = true;
                 textState.offsetX = p.mouseX - textState.x;
                 textState.offsetY = p.mouseY - textState.y;
+                
+                // Select the text
+                activeElement.type = 'text';
+                activeElement.index = -1;
+                updateUIForSelection();
+                p.redraw();
+                return false; // Prevent background click logic
+            }
+            
+            // 3. Deselection Logic (Click on background)
+            if (activeElement.type !== 'none') {
+                activeElement.type = 'none';
+                activeElement.index = -1;
+                updateUIForSelection();
                 p.redraw();
                 return false;
             }
         };
 
         p.mouseDragged = () => {
-            if (draggingElement === 'image' && userImageState.isDragging) {
-                userImageState.x = p.mouseX - userImageState.offsetX;
-                userImageState.y = p.mouseY - userImageState.offsetY;
-                p.redraw();
-            } else if (draggingElement === 'text' && textState.isDragging) {
+            // Drag selected text
+            if (textState.isDragging) {
                 textState.x = p.mouseX - textState.offsetX;
                 textState.y = p.mouseY - textState.offsetY;
                 p.redraw();
+            }
+            
+            // Drag selected image (if any)
+            for (let i = 0; i < userImages.length; i++) {
+                const img = userImages[i];
+                if (img.isDragging) {
+                    img.x = p.mouseX - img.offsetX;
+                    img.y = p.mouseY - img.offsetY;
+                    p.redraw();
+                    break; // Only one element can be dragged at a time
+                }
             }
         };
 
         p.mouseReleased = () => {
             textState.isDragging = false;
-            userImageState.isDragging = false;
-            draggingElement = null;
+            userImages.forEach(img => img.isDragging = false);
             p.redraw();
         };
 
@@ -512,8 +612,34 @@
 
             p.image(loadedImage, x, y, drawWidth, drawHeight);
           }
+          
+          // 3. Draw all user uploaded images (Drawn first among overlays)
+          userImages.forEach((img, index) => {
+              if (img.p5Img && img.originalWidth > 0) {
+                  const currentWidth = img.originalWidth * img.currentScale;
+                  const currentHeight = img.originalHeight * img.currentScale;
 
-          // 3. Draw the custom text overlay (Drawn second)
+                  p.image(
+                      img.p5Img,
+                      img.x,
+                      img.y,
+                      currentWidth,
+                      currentHeight
+                  );
+                  
+                  // Draw selection boundary if this is the active element
+                  if (activeElement.type === 'image' && activeElement.index === index) {
+                      p.stroke(255, 165, 0); // Orange selection color
+                      p.strokeWeight(3);
+                      p.noFill();
+                      p.rect(img.x, img.y, currentWidth, currentHeight);
+                      p.noStroke();
+                  }
+              }
+          });
+
+
+          // 4. Draw the custom text overlay (Drawn last, on top)
           if (textState.content.length > 0) {
             p.fill(textState.color);
             p.textSize(textState.size);
@@ -525,31 +651,41 @@
             textBounds.width = p.textWidth(textState.content);
             textBounds.x = textState.x;
             textBounds.y = textState.y;
+
+            // Draw selection boundary if text is the active element
+            if (activeElement.type === 'text') {
+                p.stroke(255, 165, 0); // Orange selection color
+                p.strokeWeight(3);
+                p.noFill();
+                
+                // Approximate the bounding box based on textBounds and size
+                const boxX = textBounds.x - textBounds.width / 2 - 5;
+                const boxY = textBounds.y - textState.size - 5; 
+                const boxW = textBounds.width + 10;
+                const boxH = textState.size + 10 + textState.size / 2; 
+
+                p.rect(boxX, boxY, boxW, boxH);
+            }
           }
-          
-          // 4. Draw the user uploaded image (Drawn last, on top)
-          if (userImage && userImage.width > 0) {
-              const currentWidth = userImageState.originalWidth * userImageState.currentScale;
-              const currentHeight = userImageState.originalHeight * userImageState.currentScale;
-
-              p.image(
-                  userImage,
-                  userImageState.x,
-                  userImageState.y,
-                  currentWidth,
-                  currentHeight
-              );
-          }
+          p.noStroke(); // Reset stroke
 
 
-          // 5. Cursor handling (Priority: Image drag > Text drag)
-          if (userImageState.isDragging || isMouseOverUserImage()) {
-              p.cursor(p.MOVE);
-          } else if (textState.isDragging || isMouseOverText()) {
-              p.cursor(p.MOVE);
+          // 5. Cursor handling (Priority: Any drag > Any hover)
+          let cursorType = p.ARROW;
+          if (textState.isDragging || userImages.some(img => img.isDragging)) {
+              cursorType = p.MOVE;
+          } else if (isMouseOverText()) {
+              cursorType = p.MOVE;
           } else {
-              p.cursor(p.ARROW);
+              // Check for hover over any image
+              for (let img of userImages) {
+                  if (isMouseOverImage(img)) {
+                      cursorType = p.MOVE;
+                      break;
+                  }
+              }
           }
+          p.cursor(cursorType);
         };
       };
 
