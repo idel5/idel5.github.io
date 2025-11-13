@@ -4,15 +4,18 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Demo Design Selector</title>
+    <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load p5.js Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
     <style>
+      /* Custom styles for better visual appeal */
       body {
         font-family: "Inter", sans-serif;
         background-color: #f3f4f6; /* Light gray background */
       }
       .card-grid-container {
-        max-height: calc(100vh - 4rem);
+        max-height: calc(100vh - 4rem); /* Adjust based on header/footer */
         overflow-y: auto;
       }
       .card {
@@ -25,7 +28,7 @@
         box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
       }
       .card.selected {
-        border: 4px solid #4f46e5;
+        border: 4px solid #4f46e5; /* Indigo ring for selection */
         box-shadow: 0 0 0 4px #818cf8;
       }
       /* Custom thumb color for the size slider */
@@ -76,81 +79,112 @@
           <!-- P5.js canvas will be inserted here -->
         </div>
         <p class="text-sm text-gray-500 mt-3 text-center mb-4">
-          Click a template on the left to load it onto this canvas.
-          <b>Drag the text</b> directly on the canvas to reposition it!
+          Click a template on the left to load it onto this canvas. **Drag the
+          text or uploaded image** directly on the canvas to reposition it!
         </p>
 
-        <!-- Text Controls Panel -->
-        <div class="p-4 border-t border-gray-200 mt-4">
-          <h3 class="text-lg font-semibold mb-3 text-gray-700">
-            Customize Text Overlay
-          </h3>
-          <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
-            <!-- Text Input -->
-            <div class="col-span-2">
-              <label
-                for="text-input"
-                class="block text-sm font-medium text-gray-700"
-                >Text Content</label
-              >
-              <input
-                type="text"
-                id="text-input"
-                value="Your Custom Text"
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border"
-              />
-            </div>
+        <!-- Main Controls Container -->
+        <div class="border-t border-gray-200 mt-4 pt-4 space-y-6">
 
-            <!-- Font Selector -->
-            <div>
-              <label
-                for="font-select"
-                class="block text-sm font-medium text-gray-700"
-                >Font Family</label
-              >
-              <select
-                id="font-select"
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border bg-white"
-              >
-                <option value="sans-serif">Sans-serif (Inter/Arial)</option>
-                <option value="serif">Serif (Times New Roman)</option>
-                <option value="monospace">Monospace (Courier)</option>
-                <option value="cursive">Cursive</option>
-              </select>
-            </div>
+          <!-- TEXT Controls Panel -->
+          <div class="p-4 bg-gray-50 rounded-lg shadow-inner">
+            <h3 class="text-lg font-semibold mb-3 text-gray-700">
+              Customize Text Overlay
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+              <!-- Text Input -->
+              <div class="col-span-2">
+                <label
+                  for="text-input"
+                  class="block text-sm font-medium text-gray-700"
+                  >Text Content</label
+                >
+                <input
+                  type="text"
+                  id="text-input"
+                  value="Your Custom Text"
+                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border"
+                />
+              </div>
 
-            <div>
-              <label
-                for="color-input"
-                class="block text-sm font-medium text-gray-700"
-                >Text Color</label
-              >
-              <input
-                type="color"
-                id="color-input"
-                value="#000000"
-                class="mt-1 block w-full h-10 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-1 cursor-pointer"
-              />
-            </div>
+              <!-- Font Selector -->
+              <div>
+                <label
+                  for="font-select"
+                  class="block text-sm font-medium text-gray-700"
+                  >Font Family</label
+                >
+                <select
+                  id="font-select"
+                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border bg-white"
+                >
+                  <option value="sans-serif">Sans-serif (Inter/Arial)</option>
+                  <option value="serif">Serif (Times New Roman)</option>
+                  <option value="monospace">Monospace (Courier)</option>
+                  <option value="cursive">Cursive</option>
+                </select>
+              </div>
 
-            <!-- Size Slider -->
-            <div>
-              <label
-                for="font-size"
-                class="block text-sm font-medium text-gray-700"
-                >Size (<span id="size-value">48</span>px)</label
-              >
-              <input
-                type="range"
-                id="font-size"
-                min="16"
-                max="120"
-                value="48"
-                class="mt-1 w-full appearance-none bg-gray-200 rounded-lg h-2 slider-thumb-indigo"
-              />
+              <!-- Color Selector -->
+              <div>
+                <label
+                  for="color-input"
+                  class="block text-sm font-medium text-gray-700"
+                  >Text Color</label
+                >
+                <input
+                  type="color"
+                  id="color-input"
+                  value="#000000"
+                  class="mt-1 block w-full h-10 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-1 cursor-pointer"
+                />
+              </div>
+
+              <!-- Size Slider -->
+              <div>
+                <label
+                  for="font-size"
+                  class="block text-sm font-medium text-gray-700"
+                  >Size (<span id="size-value">48</span>px)</label
+                >
+                <input
+                  type="range"
+                  id="font-size"
+                  min="16"
+                  max="120"
+                  value="48"
+                  class="mt-1 w-full appearance-none bg-gray-200 rounded-lg h-2 slider-thumb-indigo"
+                />
+              </div>
             </div>
           </div>
-        </div>
+          
+          <!-- NEW: User Image Controls Panel -->
+          <div class="p-4 bg-gray-50 rounded-lg shadow-inner">
+            <h3 class="text-lg font-semibold mb-3 text-gray-700">
+              User Image Upload & Transform
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+              <!-- Image Upload Input -->
+              <div>
+                <label for="image-upload" class="block text-sm font-medium text-gray-700">Upload Image (PNG/JPG)</label>
+                <input type="file" id="image-upload" accept="image/png, image/jpeg, image/jpg" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"/>
+              </div>
+              
+              <!-- Image Scale Slider -->
+              <div>
+                  <label for="image-scale" class="block text-sm font-medium text-gray-700">Image Scale (<span id="scale-value">100</span>%)</label>
+                  <input type="range" id="image-scale" min="10" max="300" value="100" class="mt-1 w-full appearance-none bg-gray-200 rounded-lg h-2 slider-thumb-indigo">
+              </div>
+
+              <!-- Reset Image Position Button -->
+              <div>
+                   <button id="reset-image-btn" class="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Reset Image Position</button>
+              </div>
+            </div>
+          </div>
+
+        </div> <!-- End Main Controls Container -->
       </div>
     </div>
 
@@ -167,11 +201,12 @@
         { id: 6, name: "Bright Celebration", url: "/images/bg6.jpg" },
       ];
 
-      let loadedImage = null;
+      let loadedImage = null; // Background template image
+      let userImage = null; // New: User uploaded image
       let selectedCardId = 1;
       let p5Instance = null;
 
-      // New state for text and dragging
+      // State for custom text overlay
       let textState = {
         content: "Your Custom Text",
         font: "sans-serif",
@@ -180,9 +215,20 @@
         x: 0,
         y: 0,
         isDragging: false,
-        // Offsets used to maintain drag position relative to mouse click point
         offsetX: 0,
         offsetY: 0,
+      };
+      
+      // New: State for user uploaded image overlay
+      let userImageState = {
+          x: 50,
+          y: 50,
+          originalWidth: 0, // Store original dimensions after load
+          originalHeight: 0,
+          currentScale: 1.0, // Multiplier for size
+          isDragging: false,
+          offsetX: 0,
+          offsetY: 0,
       };
 
       // --- 2. DOM RENDERING AND INTERACTION ---
@@ -191,31 +237,26 @@
       const p5CanvasContainer = document.getElementById("p5-canvas-container");
 
       /**
-       * Updates the selected card ID and re-renders the grid for selection styling.
-       * Loads the new image and forces a p5.js redraw.
-       * @param {number} id The ID of the card selected.
+       * Updates the selected card ID and loads the new background image.
        */
       function selectCard(id) {
         selectedCardId = id;
-        renderCards(); // Re-render to update the 'selected' class
+        renderCards();
 
-        const selected = cardsData.find((card) => card.id === id);
+        const selected = cardsData.find(card => card.id === id);
         const imageUrl = selected ? selected.url : "/images/bg1.jpg";
 
         if (p5Instance) {
-          // loadImage is a method of the p5Instance (p).
-          // We set the global loadedImage variable to the result of the load.
-          loadedImage = p5Instance.loadImage(
-            imageUrl,
-            () => {
-              console.log("Template image loaded successfully: " + imageUrl);
-              // Force redraw only after the image is fully loaded
-              p5Instance.redraw();
-            },
-            () => {
-              console.error("Failed to load template image: " + imageUrl);
-            }
-          );
+            loadedImage = p5Instance.loadImage(
+                imageUrl,
+                () => {
+                    console.log("Template image loaded successfully: " + imageUrl);
+                    p5Instance.redraw();
+                },
+                () => {
+                    console.error("Failed to load template image: " + imageUrl);
+                }
+            );
         }
       }
 
@@ -223,7 +264,7 @@
        * Renders the cards from cardsData into the grid container.
        */
       function renderCards() {
-        cardGrid.innerHTML = ""; // Clear previous cards
+        cardGrid.innerHTML = "";
 
         cardsData.forEach((card) => {
           const isSelected = card.id === selectedCardId;
@@ -257,25 +298,24 @@
       // Initial render of cards
       renderCards();
 
-      // Event listener for Text Content
+      // --- Input Event Listeners ---
+      
+      // Text Controls
       document.getElementById("text-input").addEventListener("input", (e) => {
         textState.content = e.target.value;
         if (p5Instance) p5Instance.redraw();
       });
 
-      // Event listener for Font Selector
       document.getElementById("font-select").addEventListener("change", (e) => {
         textState.font = e.target.value;
         if (p5Instance) p5Instance.redraw();
       });
 
-      // New: Event listener for Color Input
       document.getElementById("color-input").addEventListener("input", (e) => {
         textState.color = e.target.value;
         if (p5Instance) p5Instance.redraw();
       });
 
-      // Event listener for Size Slider
       const fontSizeInput = document.getElementById("font-size");
       const sizeValueSpan = document.getElementById("size-value");
 
@@ -284,35 +324,80 @@
         sizeValueSpan.textContent = textState.size;
         if (p5Instance) p5Instance.redraw();
       });
+      
+      // New: Image Upload Handler
+      document.getElementById("image-upload").addEventListener("change", (e) => {
+          const file = e.target.files[0];
+          if (file && p5Instance) {
+              const reader = new FileReader();
+              reader.onload = (readerEvent) => {
+                  const dataURL = readerEvent.target.result;
+                  userImage = p5Instance.loadImage(dataURL,
+                      (img) => {
+                          console.log("User image loaded successfully.");
+                          // Set initial dimensions and reset position
+                          userImageState.originalWidth = img.width;
+                          userImageState.originalHeight = img.height;
+                          userImageState.x = p5Instance.width / 2 - (img.width * userImageState.currentScale) / 2;
+                          userImageState.y = p5Instance.height / 2 - (img.height * userImageState.currentScale) / 2;
+                          p5Instance.redraw();
+                      },
+                      () => {
+                          console.error("Failed to load user image.");
+                      }
+                  );
+              };
+              reader.readAsDataURL(file);
+          }
+      });
+
+      // New: Image Scale Slider
+      const imageScaleInput = document.getElementById('image-scale');
+      const scaleValueSpan = document.getElementById('scale-value');
+      
+      imageScaleInput.addEventListener('input', (e) => {
+          userImageState.currentScale = parseInt(e.target.value, 10) / 100;
+          scaleValueSpan.textContent = e.target.value;
+          if (p5Instance) p5Instance.redraw();
+      });
+
+      // New: Reset Image Position Button
+      document.getElementById('reset-image-btn').addEventListener('click', () => {
+          if (userImage && p5Instance) {
+              // Recalculate position to center the current scaled image
+              const currentWidth = userImageState.originalWidth * userImageState.currentScale;
+              const currentHeight = userImageState.originalHeight * userImageState.currentScale;
+              userImageState.x = p5Instance.width / 2 - currentWidth / 2;
+              userImageState.y = p5Instance.height / 2 - currentHeight / 2;
+              p5Instance.redraw();
+          }
+      });
+
 
       // --- 3. P5.JS SKETCH ---
 
       const sketch = (p) => {
         let canvas;
         let containerWidth, containerHeight;
-        let textBounds = {}; // Stores the bounding box of the text for hit testing
+        let textBounds = {}; 
+        
+        // Flag to track which element is currently being dragged
+        let draggingElement = null; // 'text' or 'image'
 
         // p5.js preload function to load the initial image
         p.preload = () => {
-          const initialCard = cardsData.find((c) => c.id === selectedCardId);
-          // Set the global loadedImage variable here
+          const initialCard = cardsData.find(c => c.id === selectedCardId);
           loadedImage = p.loadImage(
             initialCard ? initialCard.url : "/images/bg1.jpg",
-            () => {
-              console.log("Initial template image loaded successfully.");
-            },
-            () => {
-              console.error("Failed to load initial template image.");
-            }
+            () => { console.log("Initial template image loaded successfully."); },
+            () => { console.error("Failed to load initial template image."); }
           );
         };
 
         p.setup = () => {
-          // Get the size of the container dynamically
           containerWidth = p5CanvasContainer.offsetWidth;
           containerHeight = p5CanvasContainer.offsetHeight;
 
-          // Create a canvas that fills the container
           canvas = p.createCanvas(containerWidth, containerHeight);
           canvas.parent("p5-canvas-container");
 
@@ -321,114 +406,149 @@
           textState.y = p.height / 2;
 
           p.angleMode(p.DEGREES);
-          p.noLoop(); // Only redraw on events
+          p.noLoop();
         };
 
         p.windowResized = () => {
-          // Re-calculate container size and resize canvas on window resize
           containerWidth = p5CanvasContainer.offsetWidth;
           containerHeight = p5CanvasContainer.offsetHeight;
           p.resizeCanvas(containerWidth, containerHeight);
 
-          // Re-center text position if it was outside bounds
+          // Constrain element positions
           textState.x = p.constrain(textState.x, 0, p.width);
           textState.y = p.constrain(textState.y, 0, p.height);
+          userImageState.x = p.constrain(userImageState.x, -userImageState.originalWidth * userImageState.currentScale, p.width);
+          userImageState.y = p.constrain(userImageState.y, -userImageState.originalHeight * userImageState.currentScale, p.height);
 
-          p.redraw(); // Redraw content after resize
+          p.redraw();
         };
 
         // Helper function to check if mouse is over the text
         const isMouseOverText = () => {
-          // Approximate bounding box check based on text position, size, and width
+          if (!textState.content) return false;
+          // Check based on text position, size, and width
           return (
             p.mouseX > textBounds.x - textBounds.width / 2 &&
             p.mouseX < textBounds.x + textBounds.width / 2 &&
-            p.mouseY > textBounds.y - textState.size && // Roughly top edge
+            p.mouseY > textBounds.y - textState.size &&
             p.mouseY < textBounds.y + textState.size / 2
-          ); // Roughly bottom edge
+          );
         };
+        
+        // New: Helper function to check if mouse is over the user image
+        const isMouseOverUserImage = () => {
+            if (!userImage) return false;
+            const currentWidth = userImageState.originalWidth * userImageState.currentScale;
+            const currentHeight = userImageState.originalHeight * userImageState.currentScale;
+            
+            return (
+                p.mouseX > userImageState.x &&
+                p.mouseX < userImageState.x + currentWidth &&
+                p.mouseY > userImageState.y &&
+                p.mouseY < userImageState.y + currentHeight
+            );
+        }
 
         p.mousePressed = () => {
-          if (isMouseOverText()) {
-            textState.isDragging = true;
-            // Calculate offset to prevent the text from snapping to the mouse center
-            textState.offsetX = p.mouseX - textState.x;
-            textState.offsetY = p.mouseY - textState.y;
-            p.redraw();
-            return false; // Prevent default behavior
-          }
+            // Priority: Check image first, then text
+            if (isMouseOverUserImage()) {
+                draggingElement = 'image';
+                userImageState.isDragging = true;
+                userImageState.offsetX = p.mouseX - userImageState.x;
+                userImageState.offsetY = p.mouseY - userImageState.y;
+                p.redraw();
+                return false;
+            } else if (isMouseOverText()) {
+                draggingElement = 'text';
+                textState.isDragging = true;
+                textState.offsetX = p.mouseX - textState.x;
+                textState.offsetY = p.mouseY - textState.y;
+                p.redraw();
+                return false;
+            }
         };
 
         p.mouseDragged = () => {
-          if (textState.isDragging) {
-            // Update text position based on mouse position and original offset
-            textState.x = p.mouseX - textState.offsetX;
-            textState.y = p.mouseY - textState.offsetY;
-            p.redraw();
-          }
+            if (draggingElement === 'image' && userImageState.isDragging) {
+                userImageState.x = p.mouseX - userImageState.offsetX;
+                userImageState.y = p.mouseY - userImageState.offsetY;
+                p.redraw();
+            } else if (draggingElement === 'text' && textState.isDragging) {
+                textState.x = p.mouseX - textState.offsetX;
+                textState.y = p.mouseY - textState.offsetY;
+                p.redraw();
+            }
         };
 
         p.mouseReleased = () => {
-          textState.isDragging = false;
-          p.redraw();
+            textState.isDragging = false;
+            userImageState.isDragging = false;
+            draggingElement = null;
+            p.redraw();
         };
 
         p.draw = () => {
-          // 1. Background: Clear the canvas with a light shade
+          // 1. Background: Clear the canvas
           p.background(240);
           p.noStroke();
 
-          // 2. Draw the loaded image template
-          // This uses the global loadedImage variable
-          if (selectedCardId !== null && loadedImage && loadedImage.width > 0) {
-            // Calculate image size to fit within the canvas while maintaining aspect ratio (contain)
+          // 2. Draw the loaded template image
+          if (loadedImage && loadedImage.width > 0) {
             let imgRatio = loadedImage.width / loadedImage.height;
             let canvasRatio = p.width / p.height;
             let drawWidth, drawHeight;
             let x, y;
 
             if (canvasRatio > imgRatio) {
-              // Canvas is wider than image, fit by height
               drawHeight = p.height;
               drawWidth = drawHeight * imgRatio;
             } else {
-              // Canvas is taller than image, fit by width
               drawWidth = p.width;
               drawHeight = drawWidth / imgRatio;
             }
 
-            // Center the image
             x = (p.width - drawWidth) / 2;
             y = (p.height - drawHeight) / 2;
 
             p.image(loadedImage, x, y, drawWidth, drawHeight);
           }
 
-          // 3. Draw the custom text overlay
+          // 3. Draw the custom text overlay (Drawn second)
           if (textState.content.length > 0) {
-            p.fill(textState.color); // Use the selected color for the text
+            p.fill(textState.color);
             p.textSize(textState.size);
             p.textAlign(p.CENTER, p.TOP);
-
-            // Set font based on selected family name
             p.textFont(textState.font);
-
-            // Draw the text
             p.text(textState.content, textState.x, textState.y);
 
-            // Calculate and store text bounds for dragging (using center alignment)
+            // Calculate and store text bounds
             textBounds.width = p.textWidth(textState.content);
             textBounds.x = textState.x;
             textBounds.y = textState.y;
+          }
+          
+          // 4. Draw the user uploaded image (Drawn last, on top)
+          if (userImage && userImage.width > 0) {
+              const currentWidth = userImageState.originalWidth * userImageState.currentScale;
+              const currentHeight = userImageState.originalHeight * userImageState.currentScale;
 
-            // Text focus on hover: Change cursor style
-            if (isMouseOverText() || textState.isDragging) {
+              p.image(
+                  userImage,
+                  userImageState.x,
+                  userImageState.y,
+                  currentWidth,
+                  currentHeight
+              );
+          }
+
+
+          // 5. Cursor handling (Priority: Image drag > Text drag)
+          if (userImageState.isDragging || isMouseOverUserImage()) {
               p.cursor(p.MOVE);
-            } else {
+          } else if (textState.isDragging || isMouseOverText()) {
+              p.cursor(p.MOVE);
+          } else {
               p.cursor(p.ARROW);
-            }
-          } else if (!textState.isDragging) {
-            p.cursor(p.ARROW);
           }
         };
       };
